@@ -86,7 +86,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
                     graph.getVertices().get(i).getColor()
             ));
         }
-        return new Graph(reversedVertices, graph.getObjects(), graph.getProhibitedToTransform());
+        return new Graph(reversedVertices, graph.getObjectWeight(), graph.getProhibitedToTransform());
     }
 
     private void findDescendants(Integer vertexId) {
@@ -254,7 +254,8 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
     private void setFragmentRequirements() {
         fragmentRequirements = new ArrayList<HashSet<Integer>>();
         for (int vertexId = 0; vertexId < graph.getVertices().size(); ++vertexId) {
-            if (graphReversed.getVertices().get(vertexId).getChildIds().size() > 1) {
+            if (graphReversed.getVertices().get(vertexId).getChildIds().size() > 1 &&
+                    graph.getVertices().get(vertexId).getChildIds().size() > 0) {
                 fragmentRequirements.add(new HashSet<Integer>());
                 fragmentRequirements.get(fragmentRequirements.size() - 1).add(vertexId);
                 for (Integer parentId : graphReversed.getVertices().get(vertexId).getChildIds()) {
@@ -280,7 +281,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         }
         Integer total = 0;
         for (Integer objectId : fragmentObjects) {
-            total += graph.getObjects().get(objectId);
+            total += graph.getObjectWeight().get(objectId);
         }
         return total;
     }
@@ -301,7 +302,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         }
         Integer totalWeight = 0;
         for (Integer objectId : fragmentObjects) {
-            totalWeight += graph.getObjects().get(objectId);
+            totalWeight += graph.getObjectWeight().get(objectId);
         }
         return totalWeight;
     }
@@ -399,7 +400,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
             used.add(false);
         }
         numberPrevObjectUsage = new ArrayList<Integer>();
-        for (int i = 0; i < graph.getObjects().size(); ++i) {
+        for (int i = 0; i < graph.getObjectWeight().size(); ++i) {
             numberPrevObjectUsage.add(0);
         }
         objectsUsedInDescendants = new ArrayList<HashSet<Integer>>();

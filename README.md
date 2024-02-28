@@ -1,42 +1,75 @@
-# В данном репозитории приведен алгоритм, решающий задачу алгоритмизации исходного кода на EO
+# The algorithm of algorithmization
 
-## Входные данные:
+Сonsider programming language that supports a [foreign function interface (FFI)](https://levelup.gitconnected.com/what-is-ffi-foreign-function-interface-an-intuitive-explanation-7327444e347a). The algorithm was originally developed for the EO and Rust languages. But to simplify example, consider python, which supports executing C++ code with FFI. Note that some code fragments are executed faster in python, others in C++. This algorithm tries to speed up an execution of program by using FFI.
 
-На вход алгоритму подается xml файл с описанием:
-1) Control-flow графа, который представляет собой описание входной программы;
-2) Перечня объектов, используемых в программе;
-3) Перечня вершин control-flow графа, операции, соответствующие которым, невозможно транслировать на Rust.
+Take an example. Try to speed up execution of such a python program:
 
-В корневом теге <Graph> содержатся теги для описания вершин (\<vertices>), объектов (\<objects>) и вершин, запрещенных для транслирования на Rust (\<prohibitedToTransform>).
+```py
+a = int(input())
+b = int(input())
+if a > b:
+    print('first number is more')
+else:
+    print('second number is more')
+```
 
-Каждая вершина должна находиться в дочернем элементе корня под названием \<vertices>. Уникальный идентификатор вершины ID - ее порядковый номер в списке вершин (индексация с 0).
-Каждая вершина должна содержать следующие данные:
-* \<executionTime> - тег, содержащий в себе еще 2 вложенных тега - \<EO> и \<RUST>, каждый из которых содержит ожидаемую трудозатратность выполнения операций, соответствующих данной вершине control-flow графа, на соответствующем языке (неотрицательное вещественное число);
-* \<childIds> - целочисленное неотрицательное значение, уникальный идентификатор дочерней вершины. Если дочерних вершин несколько, они перечисляются по одной, каждая в новом теге \<childIds>.
-* \<objectsToRead> - целочисленное неотрицательное значение, уникальный идентификатор объекта, который используется для чтения в фрагменте кода, соответствующем вершине. Если их несколько, перечисляются по одному, каждый в новом теге \<objectsToRead>;
-* \<objectsToWrite> - целочисленное неотрицательное значение, уникальный идентификатор объекта, который модифицируется в фрагменте кода, соответствующем вершине. Если их несколько, то перечисляются по одному, каждый в новом теге \<objectsToWrite>.
+This program corresponds to such a [control flow graph](https://www.geeksforgeeks.org/software-engineering-control-flow-graph-cfg/):
 
-Каждый объект должен находиться в дочернем элементе корня под названием \<objects>. Внутри тега должно быть только одно целое неотрицательное число - количество памяти, занимаемое объектом (в байтах).
+![simple control flow graph](resources/simple_example_cfg.png)
 
-Каждая вершина Control-flow графа, представленного во входных данных, должна соответствовать ровно одной атомарной операции. Control-flow граф должен содержать корневую вершину - точку входа в программу. Все точки выхода из программы должны быть представлены отдельными вершинами-стоками.
+The program also contains objects. Set ID to each object. $a_{ID}=0,b_{ID}=1$.
 
-Пример входного xml файла: test_examples\test1.xml.
+Also, each vertex of control flow graph contains information about code fragment, matched with this vertex. Look at example:
 
-Уникальные идентификаторы вершин, которым соответствуют фрагменты кода, которые запрещено транслировать в Rust, перечисляются в тегах <prohibitedToTransform>, по одной в каждом теге.
+![parametrized control flow graph](resources/simple_example_cfg_parametrized.png)
 
-## Выходные данные:
-Выходными данными алгоритма является .json файл с описанием списков уникальных идентификаторов вершин, которые должны быть преобразованы в код на Rust.
+Each vertex contains:
+* ID;
+* List of ID's of objects, which are not modified, but used in code fragment, matched with vertex;
+* List of ID's of objects, which are modified in code fragment, matched with vertex;
+* Execution time of code fragment in vertex on original language (in conventional units);
+* Execution time of code fragment in vertex on FFI language (in conventional units);
+* List of ID's of child vertices.
 
-Выходной .json файл должен содержать список из объектов "vertices", каждый из которых представляет из себя список целых чисел - уникальных идентификаторов вершин. В пределах одного "vertices" все операции, соответствующие данным вершинам в control-flow графе, должны быть преобразованы в одну вставку кода на Rust с помощью использования внешних функциональных интерфейсов языка EO.
+The input data for the algorithm is provided as an .xml file, here is an example: [here](test_examples/test_simple.xml).
 
-Пример выходного .json файла: test_examples\result.json.
+Detailed explanation:
 
-## Требования к алгоритму:
-Алгоритм возвращает файл со списком "vertices", каждый из них представляет из себя список целых чисел. Каждый "vertices" представляет собой список уникальных идентификаторов вершин, таких, что все фрагменты кода, соответствующие этим вершинам, должны быть преобразованы в одну единую вставку кода на Rust. Требуется, чтобы после преобразования всех фрагментов кода, которые должны быть преобразованы согласно выходным данным алгоритма, получился корректный control-flow граф g' (изначальный control flow graph - g).
+\<Graph> contains explanation of control flow graph. In vertex description there's no <ID> tag: vertices are numerated by ID in vertices list (firstly specified vertex with ID=0, after vertex with ID=1, etc.)
 
-При этом должны выполняться следующие требования:
+All objects of program specified in \<objectWeight>. For all objects should be specified only object weight. Firstly, specify weight of object with ID=0, after that weight of object with ID=1, etc.
 
-* g' - корректный control-flow граф;
-* множество допустимых входных данных для программы, соответветствующей g, должно быть подмножеством множества допустимых входных данных для программы, соответствующей g';
-* на всех входных данных из множества допустимых входных данных, выходные данные программ g и g' должны быть одинаковы;
-* в результате преобразований, которые укажет алгоритм, должна быть получена программа, время выполнения которой должно быть не больше, чем время выполнения программы с аналогичным control-flow графом, написанной чисто на EO.
+The algorithm receives the .xml file described above as input, and outputs a [.json file like this](test_examples/result_simple.json).
+
+Each "vertices" list - set of IDs of vertices, code fragments matched with which should be converted to FFI language as one code block. For this example, algorithm returned [5,6,7], so code fragments, matched with these vertices, should be converted to C++. Algorithm returns only .json, but if these code fragments will be converted with using FFI will be gotten:
+
+```cpp
+// File compare.h
+#include <iostream>
+
+void compare(int a, int b) {
+    if (a > b) {
+        std::cout << "first number is more";
+    } else {
+        std::cout << "second number is more";
+    }
+}
+```
+
+```py
+# File main.py
+import cffi
+import pathlib
+
+ffi = cffi.FFI()
+this_dir = pathlib.Path().absolute()
+h_file_name = this_dir / "cmult.h"
+with open(h_file_name) as h_file:
+    ffi.cdef(h_file.read())
+
+a = int(input())
+b = int(input())
+ffi.lib.compare(x, y)
+```
+
+In this example, the execution times of code fragments that do not correspond to reality were taken. But if they were true, then as a result of the above actions, the execution time of the program would be accelerated approximately by 40%.

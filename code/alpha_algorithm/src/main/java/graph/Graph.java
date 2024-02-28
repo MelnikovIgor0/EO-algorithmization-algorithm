@@ -11,7 +11,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 public class Graph {
     private ArrayList<Vertex> vertices;
-    private ArrayList<Integer> objects;
+    private ArrayList<Integer> objectWeight;
     private HashSet<Integer> prohibitedToTransform;
 
     public Graph() {
@@ -19,11 +19,11 @@ public class Graph {
 
     public Graph(
         ArrayList<Vertex> vertices,
-        ArrayList<Integer> objects,
+        ArrayList<Integer> objectWeight,
         HashSet<Integer> prohibitedToTransform
     ) {
         this.vertices = vertices;
-        this.objects = objects;
+        this.objectWeight = objectWeight;
         this.prohibitedToTransform = prohibitedToTransform;
     }
 
@@ -31,8 +31,8 @@ public class Graph {
         return vertices;
     }
 
-    public ArrayList<Integer> getObjects() {
-        return objects;
+    public ArrayList<Integer> getObjectWeight() {
+        return objectWeight;
     }
 
     public HashSet<Integer> getProhibitedToTransform() {
@@ -88,9 +88,9 @@ public class Graph {
             result.append("\n");
             ++counter;
         }
-        result.append("\tObjects:" + objects.size() + "\n");
+        result.append("\tObjects:" + objectWeight.size() + "\n");
         counter = 0;
-        for (Integer weight : objects) {
+        for (Integer weight : objectWeight) {
             result.append("\t\tID: " + counter + "\n");
             result.append("\t\tWeight: " + weight + "\n");
             result.append("\n");

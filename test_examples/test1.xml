@@ -311,14 +311,14 @@
 			<childIds />
 		</vertices>
 	</vertices>
-	<objects>
-		<objects>4</objects>
-		<objects>20</objects>
-		<objects>4</objects>
-		<objects>4</objects>
-		<objects>4</objects>
-		<objects>4</objects>
-	</objects>
+	<objectWeight>
+		<objectWeight>4</objectWeight>
+		<objectWeight>20</objectWeight>
+		<objectWeight>4</objectWeight>
+		<objectWeight>4</objectWeight>
+		<objectWeight>4</objectWeight>
+		<objectWeight>4</objectWeight>
+	</objectWeight>
 	<prohibitedToTransform>
 		<prohibitedToTransform>2</prohibitedToTransform>
 		<prohibitedToTransform>20</prohibitedToTransform>
