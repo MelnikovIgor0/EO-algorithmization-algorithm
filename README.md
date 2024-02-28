@@ -69,7 +69,7 @@ with open(h_file_name) as h_file:
 
 a = int(input())
 b = int(input())
-ffi.lib.compare(x, y)
+ffi.lib.compare(a, b)
 ```
 
 In this example, the execution times of code fragments that do not correspond to reality were taken. But if they were true, then as a result of the above actions, the execution time of the program would be accelerated approximately by 40%.
