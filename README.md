@@ -63,7 +63,7 @@ import pathlib
 
 ffi = cffi.FFI()
 this_dir = pathlib.Path().absolute()
-h_file_name = this_dir / "cmult.h"
+h_file_name = this_dir / "compare.h"
 with open(h_file_name) as h_file:
     ffi.cdef(h_file.read())
 
