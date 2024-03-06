@@ -41,6 +41,8 @@ All objects of program specified in \<objectWeight>. For all objects should be s
 
 The algorithm receives the .xml file described above as input, and outputs a [.json file like this](test_examples/result_simple.json).
 
+How this algorithm works is [here](algorithm_description.md).
+
 Each "vertices" list - set of IDs of vertices, code fragments matched with which should be converted to FFI language as one code block. For this example, algorithm returned [5,6,7], so code fragments, matched with these vertices, should be converted to C++. Algorithm returns only .json, but if these code fragments will be converted with using FFI will be gotten:
 
 ```cpp
@@ -63,7 +65,7 @@ import pathlib
 
 ffi = cffi.FFI()
 this_dir = pathlib.Path().absolute()
-h_file_name = this_dir / "cmult.h"
+h_file_name = this_dir / "compare.h"
 with open(h_file_name) as h_file:
     ffi.cdef(h_file.read())
 
