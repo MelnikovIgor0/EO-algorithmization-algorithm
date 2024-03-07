@@ -262,6 +262,21 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
                     fragmentRequirements.get(fragmentRequirements.size() - 1).add(parentId);
                 }
             }
+            if (graph.getVertices().get(vertexId).getChildIds().size() > 1) {
+                int numberNotLeafs = 0;
+                for (Integer childId : graph.getVertices().get(vertexId).getChildIds()) {
+                    if (graph.getVertices().get(childId).getChildIds().size() > 0) {
+                        ++numberNotLeafs;
+                    }
+                }
+                if (numberNotLeafs > 1) {
+                    fragmentRequirements.add(new HashSet<Integer>());
+                    fragmentRequirements.get(fragmentRequirements.size() - 1).add(vertexId);
+                    for (Integer childId : graph.getVertices().get(vertexId).getChildIds()) {
+                        fragmentRequirements.get(fragmentRequirements.size() - 1).add(childId);
+                    }
+                }
+            }
         }
     }
 
