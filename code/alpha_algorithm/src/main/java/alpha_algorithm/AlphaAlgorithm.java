@@ -47,26 +47,26 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
             return true;
         }
     }
-    private Graph graph;
-    private Graph graphReversed;
-    private ArrayList<Boolean> used;
-    private ArrayList<Boolean> used2;
-    private Double alpha_coeff;
-    private Double beta_coeff;
-    private Double gamma_coeff;
-    private HashSet<SubFragment> subFragments;
-    private ArrayList<Integer> numberPrevObjectUsage;
-    private ArrayList<Integer> currentDescendants;
-    private HashSet<Integer> currentFragment;
-    private ArrayList<HashSet<Integer>> objectsUsedInDescendants;
-    private ArrayList<HashSet<Integer>> cliqueGraph;
-    private ArrayList<HashSet<Integer>> fragmentRequirements;
-    private HashSet<Integer> verticesInLoops;
+    public Graph graph;
+    public Graph graphReversed;
+    public ArrayList<Boolean> used;
+    public ArrayList<Boolean> used2;
+    public Double alpha_coeff;
+    public Double beta_coeff;
+    public Double gamma_coeff;
+    public HashSet<SubFragment> subFragments;
+    public ArrayList<Integer> numberPrevObjectUsage;
+    public ArrayList<Integer> currentDescendants;
+    public HashSet<Integer> currentFragment;
+    public ArrayList<HashSet<Integer>> objectsUsedInDescendants;
+    public ArrayList<HashSet<Integer>> cliqueGraph;
+    public ArrayList<HashSet<Integer>> fragmentRequirements;
+    public HashSet<Integer> verticesInLoops;
 
     public AlphaAlgorithm() {
     }
 
-    private Graph buildReversedGraph() {
+    public Graph buildReversedGraph(Graph graph) {
         ArrayList<ArrayList<Integer>> matchesReversed = new ArrayList<ArrayList<Integer>>();
         for (int i = 0; i < graph.getVertices().size(); ++i) {
             matchesReversed.add(new ArrayList<>());
@@ -89,7 +89,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         return new Graph(reversedVertices, graph.getObjectWeight(), graph.getProhibitedToTransform());
     }
 
-    private void findDescendants(Integer vertexId) {
+    public void findDescendants(Integer vertexId) {
         used2.set(vertexId, true);
         currentDescendants.add(vertexId);
         for (Integer childId : graph.getVertices().get(vertexId).getChildIds()) {
@@ -99,7 +99,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         }
     }
 
-    private ArrayList<Integer> getVertexDescendants(Integer vertexId) {
+    public ArrayList<Integer> getVertexDescendants(Integer vertexId) {
         currentDescendants = new ArrayList<Integer>();
         used2 = new ArrayList<Boolean>();
         for (int i = 0; i < graph.getVertices().size(); ++i) {
@@ -109,7 +109,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         return currentDescendants;
     }
 
-    private void setObjectsUsedInDescendants(Integer vertexId, Integer rootId) {
+    public void setObjectsUsedInDescendants(Integer vertexId, Integer rootId) {
         used2.set(vertexId, true);
         if (!vertexId.equals(rootId)) {
             for (Integer objectId : graph.getVertices().get(vertexId).getObjectsToRead()) {
@@ -126,7 +126,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         }
     }
 
-    private void setFragment(Integer vertexId, Integer finishVertex) {
+    public void setFragment(Integer vertexId, Integer finishVertex) {
         used2.set(vertexId, true);
         if (graph.getVertices().get(vertexId).getChildIds().size() != 0) currentFragment.add(vertexId);
         if (vertexId.equals(finishVertex)) {
@@ -139,7 +139,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         }
     }
 
-    private void checkSubFragment(Integer startVertexId, Integer finishVertexId) {
+    public void checkSubFragment(Integer startVertexId, Integer finishVertexId) {
         used2 = new ArrayList<Boolean>();
         for (int i = 0; i < graph.getVertices().size(); ++i) {
             used2.add(false);
@@ -225,7 +225,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         }
     }
 
-    private Boolean checkVertexInLoop(Integer vertexId, Integer startVertexId) {
+    public Boolean checkVertexInLoop(Integer vertexId, Integer startVertexId) {
         used2.set(vertexId, true);
         for (Integer childId : graph.getVertices().get(vertexId).getChildIds()) {
             if (childId.equals(startVertexId)) {
@@ -238,7 +238,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         return false;
     }
 
-    private void setVerticesInLoops() {
+    public void setVerticesInLoops() {
         verticesInLoops = new HashSet<Integer>();
         for (int vertexId = 0; vertexId < graph.getVertices().size(); ++vertexId) {
             used2 = new ArrayList<Boolean>();
@@ -251,7 +251,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         }
     }
 
-    private void setFragmentRequirements() {
+    public void setFragmentRequirements() {
         fragmentRequirements = new ArrayList<HashSet<Integer>>();
         for (int vertexId = 0; vertexId < graph.getVertices().size(); ++vertexId) {
             if (graphReversed.getVertices().get(vertexId).getChildIds().size() > 1 &&
@@ -280,7 +280,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         }
     }
 
-    private Integer getFragmentImportObjectsWeight() {
+    public Integer getFragmentImportObjectsWeight() {
         HashSet<Integer> fragmentObjects = new HashSet<Integer>();
         for (Integer vertexId : currentFragment) {
             for (Integer objectId : graph.getVertices().get(vertexId).getObjectsToRead()) {
@@ -301,7 +301,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         return total;
     }
 
-    private Integer getFragmentExportObjectsWeight() {
+    public Integer getFragmentExportObjectsWeight() {
         HashSet<Integer> fragmentObjects = new HashSet<Integer>();
         for (Integer vertexId : currentFragment) {
             for (Integer objectId : graph.getVertices().get(vertexId).getObjectsToWrite()) {
@@ -317,7 +317,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         return totalWeight;
     }
 
-    private Double getFragmentTotalExecutionTime(Color color) {
+    public Double getFragmentTotalExecutionTime(Color color) {
         Double total = 0.0;
         for (Integer vertexId : currentFragment) {
             total += graph.getVertices().get(vertexId).getExecutionTime().get(color);
@@ -325,7 +325,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         return total;
     }
 
-    private Double getFragmentProfit(Boolean isLoopPart) {
+    public Double getFragmentProfit(Boolean isLoopPart) {
         Integer transportingWeight = (getFragmentImportObjectsWeight() + getFragmentExportObjectsWeight());
         if (isLoopPart) {
             return getFragmentTotalExecutionTime(Color.EO) -
@@ -337,7 +337,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
                 (alpha_coeff + beta_coeff * transportingWeight);
     }
 
-    private void findSubFragments(Integer vertexId) {
+    public void findSubFragments(Integer vertexId) {
         used.set(vertexId, true);
         for (Integer objectId : graph.getVertices().get(vertexId).getObjectsToRead()) {
             numberPrevObjectUsage.set(objectId, numberPrevObjectUsage.get(objectId) + 1);
@@ -364,7 +364,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         }
     }
 
-    private void buildCliqueGraph(ArrayList<SubFragment> fragments) {
+    public void buildCliqueGraph(ArrayList<SubFragment> fragments) {
         cliqueGraph = new ArrayList<HashSet<Integer>>();
         for (int i = 0; i < subFragments.size(); ++i) {
             cliqueGraph.add(new HashSet<Integer>());
@@ -386,7 +386,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         }
     }
 
-    private ArrayList<Fragment> convertToFragments(ArrayList<Integer> cliqueVertices, ArrayList<SubFragment> subFragments) {
+    public ArrayList<Fragment> convertToFragments(ArrayList<Integer> cliqueVertices, ArrayList<SubFragment> subFragments) {
         ArrayList<Fragment> fragments = new ArrayList<>();
         for (Integer cliqueVertex : cliqueVertices) {
             fragments.add(new Fragment(new ArrayList<Integer>()));
@@ -400,7 +400,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
     @Override
     public ArrayList<Fragment> algorithmize(Graph graph, Double alpha_coeff, Double beta_coeff, Double gamma_coeff, CliqueTaskSolver solver) {
         this.graph = graph;
-        this.graphReversed = buildReversedGraph();
+        this.graphReversed = buildReversedGraph(graph);
         this.alpha_coeff = alpha_coeff;
         this.beta_coeff = beta_coeff;
         this.gamma_coeff = gamma_coeff;
