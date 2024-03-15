@@ -621,7 +621,7 @@ else: # fragment 2
 
             </prohibitedToTransform>
         </Graph>
-        ```
+    ```
 
 _Note: in the future, a special utility will be developed that will allow you to automatically build an .xml file with input data, based on the source code._
 
@@ -635,7 +635,7 @@ This section describes how to start a project and use it to get a set of code fr
 
 3) [Install maven](https://maven.apache.org/install.html);
 
-4) To build \:
+4) To build:
 
     ```bash
     cd code\alpha_algorithm
