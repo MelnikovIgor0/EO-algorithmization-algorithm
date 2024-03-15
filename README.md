@@ -331,13 +331,15 @@ else: # fragment 2
     * a - 0
     * b - 1
 
+    If you are working with a programming language that has primitive types, then consider variables of these primitive types to be objects too. In the vast majority of cases, all objects of the same container should be considered one object.
+
 9) For each object from program in `main`, in `<objectWeight>` tag, add 
 
     ```xml
     <objectWeight>X</objectWeight>
     ```
 
-    where X - maximum possible weight of this object.
+    where X - maximum possible weight of this object in bytes.
 
     For break down from 4, `input.xml` will be:
 
@@ -627,9 +629,26 @@ _Note: in the future, a special utility will be developed that will allow you to
 
 This section describes how to start a project and use it to get a set of code fragments that need to be converted.
 
-1) Clone this repository.
+1) Clone this repository;
 
-2) To run this project, 
+2) Install [JDK](https://www.oracle.com/java/technologies/javase/jdk19-archive-downloads.html);
+
+3) [Install maven](https://maven.apache.org/install.html);
+
+4) To build \:
+
+    ```bash
+    cd code\alpha_algorithm
+    mvn package
+    ```
+
+5) To run:
+
+    ```bash
+    mvn exec:java -Dexec.mainClass="alpha_algorithm.Main" -Dexec.args="--input input.xml --output result.json"
+    ```
+
+    Where `input.xml` is the path to file with input data, written in the previous section, and `result.json` is the path to the file where the algorithm outputs the data.
 
 ## Performing transformations in accordance with the result of the algorithm
 
