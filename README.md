@@ -656,6 +656,8 @@ This section describes how to start a project and use it to get a set of code fr
 
     The value of `gamma` corresponds to regularization factor. If `gamma` equals 1, then there's no regularization. If gamma equals 1, there's no regularization. If `gamma `$\in (0;1)$, then regularization is used.
 
+    Default values: `alpha=1.01`, `beta=1.0`, `gamma=0.8`.
+
 ## Performing transformations in accordance with the result of the algorithm
 
 After the algorithm is running, the `result.json` file will look like:
