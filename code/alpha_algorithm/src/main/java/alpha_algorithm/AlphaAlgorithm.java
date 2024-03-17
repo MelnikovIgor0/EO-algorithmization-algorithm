@@ -218,7 +218,7 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
                     break;
                 }
             }
-            Double profit = getFragmentProfit(finishVertexId, isLoopPart);
+            Double profit = getFragmentProfit(isLoopPart);
             if (profit > 0) {
                 subFragments.add(new SubFragment(profit, currentFragment));
             }
@@ -301,14 +301,9 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         return total;
     }
 
-    private Integer getFragmentExportObjectsWeight(Integer finishVertex) {
+    private Integer getFragmentExportObjectsWeight() {
         HashSet<Integer> fragmentObjects = new HashSet<Integer>();
         for (Integer vertexId : currentFragment) {
-            for (Integer objectId : graph.getVertices().get(vertexId).getObjectsToRead()) {
-                if (objectsUsedInDescendants.get(vertexId).contains(objectId)) {
-                    fragmentObjects.add(objectId);
-                }
-            }
             for (Integer objectId : graph.getVertices().get(vertexId).getObjectsToWrite()) {
                 if (objectsUsedInDescendants.get(vertexId).contains(objectId)) {
                     fragmentObjects.add(objectId);
@@ -330,8 +325,8 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         return total;
     }
 
-    private Double getFragmentProfit(Integer finishVertexId, Boolean isLoopPart) {
-        Integer transportingWeight = (getFragmentImportObjectsWeight() + getFragmentExportObjectsWeight(finishVertexId));
+    private Double getFragmentProfit(Boolean isLoopPart) {
+        Integer transportingWeight = (getFragmentImportObjectsWeight() + getFragmentExportObjectsWeight());
         if (isLoopPart) {
             return getFragmentTotalExecutionTime(Color.EO) -
                     getFragmentTotalExecutionTime(Color.RUST) -

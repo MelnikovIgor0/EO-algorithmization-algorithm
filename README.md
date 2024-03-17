@@ -645,10 +645,16 @@ This section describes how to start a project and use it to get a set of code fr
 5) To run:
 
     ```bash
-    mvn exec:java -Dexec.mainClass="alpha_algorithm.Main" -Dexec.args="--input input.xml --output result.json"
+    mvn exec:java -Dexec.mainClass="alpha_algorithm.Main" -Dexec.args="--input input.xml --output result.json --alpha 1 --beta 1 --gamma 0.8"
     ```
 
-    Where `input.xml` is the path to file with input data, written in the previous section, and `result.json` is the path to the file where the algorithm outputs the data.
+    Where `input.xml` is the path to file with input data, written in the previous section, and `result.json` is the path to the file where the algorithm outputs the data. `alpha`, `beta` and `gamma` are algorithm hyperparameters. `input` and `output` params are required, while `alpha`, `beta` and `gamma` are optional params.
+
+    The value of `alpha` corresponds to constant part of labor cost of transporting data to fragment of code, transformed to FFI language.
+
+    The value of `beta` corresponds to linear part of labor cost of transporting data to fragment of code, depending on summarized weight of objects in code fragment, transformed to FFI language.
+
+    The value of `gamma` corresponds to regularization factor. If `gamma` equals 1, then there's no regularization. If gamma equals 1, there's no regularization. If `gamma `$\in (0;1)$, then regularization is used.
 
 ## Performing transformations in accordance with the result of the algorithm
 
