@@ -1,3 +1,133 @@
+# Short and simple example
+
+Let's assume, you have a Python program:
+
+```python
+x = input()
+if x == 'Alice':
+    print("Hello, Alice!")
+else:
+    print("You are not Alice!")
+```
+
+Then, you represent it as a Control Flow Graph:
+
+![simplest control flow graph](resources/cfg_simplest.png)
+
+Then, you create an XML representation of the program, in our format in `input.xml`:
+
+```xml
+<Graph>
+    <vertices>
+        <vertices>
+            <objectsToRead/>
+            <objectsToWrite/>
+            <executionTime>
+                <EO>0</EO>
+                <RUST>0</RUST>
+            </executionTime>
+            <childIds>
+                <childIds>1</childIds>
+            </childIds>
+        </vertices>
+        <vertices>
+            <objectsToRead/>
+            <objectsToWrite>
+                <objectsToWrite>0</objectsToWrite>
+            </objectsToWrite>
+            <executionTime>
+                <EO>50</EO>
+                <RUST>100</RUST>
+            </executionTime>
+            <childIds>
+                <childIds>2</childIds>
+            </childIds>
+        </vertices>
+        <vertices>
+            <objectsToRead>
+                <objectsToRead>0</ojectsToRead>
+            </objectsToRead>
+            <objectsToWrite/>
+            <executionTime>
+                <EO>20</EO>
+                <RUST>10</RUST>
+            </executionTime>
+            <childIds>
+                <childIds>3</childIds>
+                <childIds>4</childIds>
+            </childIds>
+        </vertices>
+        <vertices>
+            <objectsToRead/>
+            <objectsToWrite/>
+            <executionTime>
+                <EO>500</EO>
+                <RUST>200</RUST>
+            </executionTime>
+            <childIds>
+                <childIds>5</childIds>
+            </childIds>
+        </vertices>
+        <vertices>
+            <objectsToRead/>
+            <objectsToWrite/>
+            <executionTime>
+                <EO>500</EO>
+                <RUST>200</RUST>
+            </executionTime>
+            <childIds>
+                <childIds>5</childIds>
+            </childIds>
+        </vertices>
+        <vertices>
+            <objectsToRead/>
+            <objectsToWrite/>
+            <executionTime>
+                <EO>0</EO>
+                <RUST>0</RUST>
+            </executionTime>
+            <childIds />
+        </vertices>
+    </vertices>
+    <objectWeight>
+        <objectWeight>400</objectWeight>
+    </objectWeight>
+</Graph>
+```
+
+Then, you install JDK and Maven. Then, clone this repository and build a JAR:
+
+```bash
+mvn package
+```
+
+Then, you run our tool:
+
+```bash
+mvn exec:java -Dexec.mainClass="alpha_algorithm.Main" -Dexec.args="--input input.xml --output result.json --alpha 1 --beta 1 --gamma 0.8"
+```
+
+You will get a new `result.json` file, like this:
+
+```json
+[
+    {"vertices":[2,3,4]}
+]
+```
+
+This means that the code fragment, matched with this code frgment from source program
+
+```py
+if x == 'Alice':
+    print("Hello, Alice!")
+else:
+    print("You are not Alice!")
+```
+
+should be transformed to code in C++. In this case, the program will run faster.
+
+_You can read more about what happened here and why it was done in the sections below._
+
 # Abstract
 
 Сonsider programming language that supports a [foreign function interface (FFI)](https://levelup.gitconnected.com/what-is-ffi-foreign-function-interface-an-intuitive-explanation-7327444e347a). The algorithm was originally developed for the EO and Rust languages, however, it can be applied to other programming languages as well. To simplify example, consider python, which supports executing C++ code with FFI. Note that some code fragments are executed faster in python, others in C++. This algorithm tries to speed up an execution of programs by using FFI.
@@ -675,14 +805,23 @@ The algorithm guarantees that it is possible to perform all the transformations 
 Apply the transformations specified by the algorithm and there be will be gotten:
 
 ```cpp
-// File compare.h
+// File libcompare.cpp
 #include <iostream>
 
-void compare(int a, int b) {
+void compare(int a, int b)
+{
     if (a > b) {
-        std::cout << "first number is more";
+        std::cout << "first is more";
     } else {
-        std::cout << "second number is more";
+        std::cout << "second is more";
+    }
+}
+
+extern "C"
+{
+    extern void cffi_compare(int a, int b)
+    {
+        return compare(a, b);
     }
 }
 ```
@@ -690,18 +829,27 @@ void compare(int a, int b) {
 ```py
 # File main.py
 import cffi
-import pathlib
 
 ffi = cffi.FFI()
-this_dir = pathlib.Path().absolute()
-h_file_name = this_dir / "compare.h"
-with open(h_file_name) as h_file:
-    ffi.cdef(h_file.read())
+ffi.cdef("void cffi_compare(int a, int b);")
+C = ffi.dlopen("./libcompare.so")
 
 a = int(input())
 b = int(input())
-ffi.lib.compare(a, b)
+C.cffi_compare(a, b)
 ```
+
+```sh
+# File go.sh
+set -e
+
+[ -z "$PYTHON" ] && PYTHON="python"
+
+g++ -o ./libcompare.so ./libcompare.cpp -fPIC -shared
+python main.py
+```
+
+To execute program, just run `go.sh`.
 
 _Note: in the future, a special utility will be developed that will automatically perform transformations based on the source code `main` and the `result.json` file, returned by the algorithm._
 
