@@ -150,29 +150,13 @@ This section shows how to build an input file for the algorithm using the source
 
 Firstly, you need to create a file with the input data for the algorithm to work. Let the source code of the program to optimize be in the `main` file, and the input file for the algorithm is `input.xml`.
 
-1) Create `input.xml` file and copy this template there:
-
-```xml
-<Graph>
-	<vertices>
-		
-	</vertices>
-	<objectWeight>
-		
-	</objectWeight>
-    <prohibitedToTransform>
-
-    </prohibitedToTransform>
-</Graph>
-```
-
-2) The source code of the program from `main` must be broken down into separate fragments. There is no clear limit to how small that fragments should be, but the smaller they are, the better program will be optimized. There is only one restriction: if more than one operation can be performed after a fragment is executed, then the fragment must include either all of these operations or none of them. As example, this part of code can be placed in one fragment:
+1) The source code of the program from `main` must be broken down into separate fragments. There is no clear limit to how small that fragments should be, but the smaller they are, the better program will be optimized. There is only one restriction: if more than one operation can be performed after a fragment is executed, then the fragment must include either all of these operations or none of them. As example, this part of code can be placed in one fragment:
 
 ```py
 if a > b:
     print('first is more')
 else:
-    print('second is more)
+    print('second is more')
 ```
 
 but this can not be:
@@ -216,9 +200,9 @@ else: # fragment 2
     print('second number is more') # fragment 2
 ```
 
-3) After that, add a dummy fragment for entry point operation and one or more dummy fragments for exit point operations.
+2) After that, add a dummy fragment for entry point operation and one or more dummy fragments for exit point operations.
     
-4) Number all the fragments starting from 0, and the value 0 should be for the fragment corresponding to the dummy fragment for the entry point. Number matched to fragment - its ID.
+3) Number all the fragments starting from 0, and the value 0 should be for the fragment corresponding to the dummy fragment for the entry point. Number matched to fragment - its ID.
 
     Example:
 
@@ -252,6 +236,21 @@ else: # fragment 2
 
     ![simple CFG](resources/cfg_simple.png)
 
+4) Create `input.xml` file and copy this template there:
+
+```xml
+<Graph>
+    <vertices>
+		
+    </vertices>
+    <objectWeight>
+		
+    </objectWeight>
+    <prohibitedToTransform>
+
+    </prohibitedToTransform>
+</Graph>
+```
 
 5) In the file `input.xml `in the `<vertices>` tag, for each fragment in order of increasing fragment ID, add this tag:
 
