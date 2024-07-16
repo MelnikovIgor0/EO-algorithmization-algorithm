@@ -14,4 +14,9 @@ public final class Fragment {
     public ArrayList<Integer> getVertices() {
         return vertices;
     }
+
+    @Override
+    public int hashCode() {
+        return vertices.hashCode();
+    }
 }

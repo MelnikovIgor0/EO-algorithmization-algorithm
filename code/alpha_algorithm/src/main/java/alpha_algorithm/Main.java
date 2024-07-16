@@ -2,11 +2,8 @@ package alpha_algorithm;
 
 import graph.Graph;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Optional;
 
 import org.apache.commons.cli.*;
 
@@ -36,6 +33,10 @@ public class Main {
         gammaParam.setRequired(false);
         options.addOption(gammaParam);
 
+        Option solverParam = new Option("s", "clique-solver-strategy", true, "strategy of solving maximal clique task");
+        gammaParam.setRequired(false);
+        options.addOption(solverParam);
+
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine cmd = null;
@@ -45,7 +46,6 @@ public class Main {
         } catch (ParseException e) {
             System.out.println(e.getMessage());
             formatter.printHelp("utility-name", options);
-
             System.exit(1);
         }
 
@@ -54,6 +54,7 @@ public class Main {
         String alphaCoefficient = cmd.getOptionValue("alpha");
         String betaCoefficient = cmd.getOptionValue("beta");
         String gammaCoefficient = cmd.getOptionValue("gamma");
+        String cliqueSolverStrategy = cmd.getOptionValue("clique-solver-strategy");
 
         Double alpha = 1.0;
         if (alphaCoefficient != null) {
@@ -69,12 +70,38 @@ public class Main {
         }
 
         Graph graph = Graph.ParseGraph(inputFilePath);
+
+        CliqueTaskSolver solver = new Greedy1CliqueTaskSolver();
+        switch (cliqueSolverStrategy) {
+            case "full":
+                solver = new FullSearchCliqueTaskSolver();
+                break;
+            case "greedy1":
+                solver = new Greedy1CliqueTaskSolver();
+                break;
+            case "greedy2":
+                solver = new Greedy2CliqueTaskSolver();
+                break;
+            case "auto":
+                if (graph.getVertices().size() < 30) {
+                    solver = new FullSearchCliqueTaskSolver();
+                } else if (graph.getVertices().size() < 200) {
+                    solver = new Greedy2CliqueTaskSolver();
+                } else {
+                    solver = new Greedy1CliqueTaskSolver();
+                }
+                break;
+            default:
+                System.exit(1);
+        }
+
         AlphaAlgorithm algorithm = new AlphaAlgorithm();
         ArrayList<Fragment> fragments = algorithm.algorithmize(graph,
                 alpha,
                 beta,
                 gamma,
-                new FullSearchCliqueTaskSolver());
+                solver
+        );
         ResultExporter.exportToJson(fragments, outputFilePath);
     }
 }

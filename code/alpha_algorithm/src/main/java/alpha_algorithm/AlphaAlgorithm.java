@@ -4,17 +4,19 @@ import graph.Color;
 import graph.Graph;
 import graph.Vertex;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 
 import java.lang.Math;
 
 public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
-    private static class SubFragment {
+    public static class SubFragment {
         public Double profit;
         public HashSet<Integer> vertices;
 
-        public SubFragment(Double profit, HashSet<Integer> vertices) {
+        public SubFragment(Double profit,
+                           HashSet<Integer> vertices) {
             this.profit = profit;
             this.vertices = (HashSet<Integer>)vertices.clone();
         }
@@ -23,45 +25,12 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         public int hashCode() {
             return profit.hashCode() * 37 + vertices.hashCode() * 31;
         }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final SubFragment other = (SubFragment)obj;
-            if (Math.abs(profit - other.profit) > 1e-7) {
-                return false;
-            }
-            if (vertices.size() != other.vertices.size()) {
-                return false;
-            }
-            for (Integer vertex : vertices) {
-                if (!other.vertices.contains(vertex)) {
-                    return false;
-                }
-            }
-            return true;
-        }
     }
     public Graph graph;
     public Graph graphReversed;
-    public ArrayList<Boolean> used;
-    public ArrayList<Boolean> used2;
     public Double alpha_coeff;
     public Double beta_coeff;
     public Double gamma_coeff;
-    public HashSet<SubFragment> subFragments;
-    public ArrayList<Integer> numberPrevObjectUsage;
-    public ArrayList<Integer> currentDescendants;
-    public HashSet<Integer> currentFragment;
-    public ArrayList<HashSet<Integer>> objectsUsedInDescendants;
-    public ArrayList<HashSet<Integer>> cliqueGraph;
-    public ArrayList<HashSet<Integer>> fragmentRequirements;
-    public HashSet<Integer> verticesInLoops;
 
     public AlphaAlgorithm() {
     }
@@ -86,30 +55,37 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
                     graph.getVertices().get(i).getColor()
             ));
         }
-        return new Graph(reversedVertices, graph.getObjectWeight(), graph.getProhibitedToTransform());
+        return new Graph(reversedVertices,
+                graph.getObjectWeight(),
+                graph.getProhibitedToTransform());
     }
 
-    public void findDescendants(Integer vertexId) {
+    public void findDescendants(Integer vertexId,
+                                ArrayList<Integer> currentDescendants,
+                                ArrayList<Boolean> used2) {
         used2.set(vertexId, true);
         currentDescendants.add(vertexId);
         for (Integer childId : graph.getVertices().get(vertexId).getChildIds()) {
             if (!used2.get(childId)) {
-                findDescendants(childId);
+                findDescendants(childId, currentDescendants, used2);
             }
         }
     }
 
     public ArrayList<Integer> getVertexDescendants(Integer vertexId) {
-        currentDescendants = new ArrayList<Integer>();
-        used2 = new ArrayList<Boolean>();
+        ArrayList<Integer> currentDescendants = new ArrayList<Integer>();
+        ArrayList<Boolean> used2 = new ArrayList<Boolean>();
         for (int i = 0; i < graph.getVertices().size(); ++i) {
             used2.add(false);
         }
-        findDescendants(vertexId);
+        findDescendants(vertexId, currentDescendants, used2);
         return currentDescendants;
     }
 
-    public void setObjectsUsedInDescendants(Integer vertexId, Integer rootId) {
+    public void setObjectsUsedInDescendants(Integer vertexId,
+                                            Integer rootId,
+                                            ArrayList<Boolean> used2,
+                                            ArrayList<HashSet<Integer>> objectsUsedInDescendants) {
         used2.set(vertexId, true);
         if (!vertexId.equals(rootId)) {
             for (Integer objectId : graph.getVertices().get(vertexId).getObjectsToRead()) {
@@ -121,38 +97,50 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         }
         for (Integer childId : graph.getVertices().get(vertexId).getChildIds()) {
             if (!used2.get(childId)) {
-                setObjectsUsedInDescendants(childId, rootId);
+                setObjectsUsedInDescendants(childId,
+                        rootId,
+                        used2,
+                        objectsUsedInDescendants);
             }
         }
     }
 
-    public void setFragment(Integer vertexId, Integer finishVertex) {
+    public void setFragment(Integer vertexId,
+                            Integer finishVertex,
+                            HashSet<Integer> currentFragment,
+                            ArrayList<Boolean> used2) {
         used2.set(vertexId, true);
-        if (graph.getVertices().get(vertexId).getChildIds().size() != 0) currentFragment.add(vertexId);
+        if (graph.getVertices().get(vertexId).getChildIds().size() != 0) {
+            currentFragment.add(vertexId);
+        }
         if (vertexId.equals(finishVertex)) {
             return;
         }
         for (Integer childId : graph.getVertices().get(vertexId).getChildIds()) {
             if (!used2.get(childId)) {
-                setFragment(childId, finishVertex);
+                setFragment(childId,
+                        finishVertex,
+                        currentFragment,
+                        used2);
             }
         }
     }
 
-    public void checkSubFragment(Integer startVertexId, Integer finishVertexId) {
-        used2 = new ArrayList<Boolean>();
+    public Boolean checkSubFragment(Integer startVertexId,
+                                 Integer finishVertexId,
+                                 HashSet<SubFragment> subFragments,
+                                 ArrayList<Integer> numberPrevObjectUsage,
+                                 ArrayList<HashSet<Integer>> objectsUsedInDescendants,
+                                 ArrayList<HashSet<Integer>> fragmentRequirements,
+                                 HashSet<Integer> verticesInLoops) {
+        ArrayList <Boolean> used2 = new ArrayList<Boolean>();
         for (int i = 0; i < graph.getVertices().size(); ++i) {
             used2.add(false);
         }
-        currentFragment = new HashSet<Integer>();
-        setFragment(startVertexId, finishVertexId);
+        HashSet<Integer> currentFragment = new HashSet<Integer>();
+        setFragment(startVertexId, finishVertexId, currentFragment, used2);
         if (currentFragment.contains(0)) {
-            return;
-        }
-        for (Integer vertexId : currentFragment) {
-            if (graph.getVertices().get(vertexId).getChildIds().size() == 0) {
-                return;
-            }
+            return false;
         }
         for (HashSet<Integer> requirement : fragmentRequirements) {
             int kol = 0;
@@ -162,28 +150,22 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
                 }
             }
             if (kol != 0 && kol != requirement.size()) {
-                return;
+                return false;
             }
         }
         for (Integer vertexId : currentFragment) {
             if (graph.getProhibitedToTransform().contains(vertexId)) {
-                return;
+                return false;
             }
         }
         int numberVerticesTurningOutFragment = 0;
         int numberVerticesInputtingOutFragment = 0;
         for (Integer vertexId : currentFragment) {
-            if (graphReversed.getVertices().get(vertexId).getChildIds().size() > 1) {
-                for (Integer parentId : graphReversed.getVertices().get(vertexId).getChildIds()) {
-                    if (!currentFragment.contains(parentId)) {
-                        return;
-                    }
-                }
-            }
             boolean turningOut = false;
             boolean inputtingOut = false;
             for (Integer childId : graph.getVertices().get(vertexId).getChildIds()) {
-                if (!currentFragment.contains(childId) && graph.getVertices().get(childId).getChildIds().size() != 0) {
+                if (!currentFragment.contains(childId) &&
+                        graph.getVertices().get(childId).getChildIds().size() != 0) {
                     turningOut = true;
                     break;
                 }
@@ -203,12 +185,15 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         }
         if (
                 (
-                        (numberVerticesTurningOutFragment < 2 && graph.getVertices().get(finishVertexId).getChildIds().size() != 0) ||
-                                (numberVerticesTurningOutFragment == 0 && graph.getVertices().get(finishVertexId).getChildIds().size() == 0)
+                        (numberVerticesTurningOutFragment < 2 &&
+                                graph.getVertices().get(finishVertexId).getChildIds().size() != 0) ||
+                                (numberVerticesTurningOutFragment == 0 &&
+                                        graph.getVertices().get(finishVertexId).getChildIds().size() == 0)
                 ) &&
                 (
-                        (numberVerticesInputtingOutFragment < 2 && !startVertexId.equals(0)) ||
-                        (numberVerticesInputtingOutFragment == 0 && startVertexId.equals(0))
+                        (numberVerticesInputtingOutFragment < 2 &&
+                                !startVertexId.equals(0)) ||
+                        (numberVerticesInputtingOutFragment == 0)
                 )
         ) {
             boolean isLoopPart = false;
@@ -218,41 +203,49 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
                     break;
                 }
             }
-            Double profit = getFragmentProfit(isLoopPart);
+            Double profit = getFragmentProfit(isLoopPart,
+                    currentFragment,
+                    numberPrevObjectUsage,
+                    objectsUsedInDescendants);
             if (profit > 0) {
                 subFragments.add(new SubFragment(profit, currentFragment));
-            }
-        }
-    }
-
-    public Boolean checkVertexInLoop(Integer vertexId, Integer startVertexId) {
-        used2.set(vertexId, true);
-        for (Integer childId : graph.getVertices().get(vertexId).getChildIds()) {
-            if (childId.equals(startVertexId)) {
-                return true;
-            }
-            if (!used2.get(childId) && checkVertexInLoop(childId, startVertexId)) {
                 return true;
             }
         }
         return false;
     }
 
-    public void setVerticesInLoops() {
-        verticesInLoops = new HashSet<Integer>();
+    public Boolean checkVertexInLoop(Integer vertexId,
+                                     Integer startVertexId,
+                                     ArrayList<Boolean> used2) {
+        used2.set(vertexId, true);
+        for (Integer childId : graph.getVertices().get(vertexId).getChildIds()) {
+            if (childId.equals(startVertexId)) {
+                return true;
+            }
+            if (!used2.get(childId) && checkVertexInLoop(childId, startVertexId, used2)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public HashSet<Integer> setVerticesInLoops() {
+        HashSet<Integer> verticesInLoops = new HashSet<Integer>();
         for (int vertexId = 0; vertexId < graph.getVertices().size(); ++vertexId) {
-            used2 = new ArrayList<Boolean>();
+            ArrayList<Boolean> used2 = new ArrayList<Boolean>();
             for (int i = 0; i < graph.getVertices().size(); ++i) {
                 used2.add(false);
             }
-            if (checkVertexInLoop(vertexId, vertexId)) {
+            if (checkVertexInLoop(vertexId, vertexId, used2)) {
                 verticesInLoops.add(vertexId);
             }
         }
+        return verticesInLoops;
     }
 
-    public void setFragmentRequirements() {
-        fragmentRequirements = new ArrayList<HashSet<Integer>>();
+    public ArrayList<HashSet<Integer>> setFragmentRequirements() {
+        ArrayList<HashSet<Integer>> fragmentRequirements = new ArrayList<HashSet<Integer>>();
         for (int vertexId = 0; vertexId < graph.getVertices().size(); ++vertexId) {
             if (graphReversed.getVertices().get(vertexId).getChildIds().size() > 1 &&
                     graph.getVertices().get(vertexId).getChildIds().size() > 0) {
@@ -278,9 +271,11 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
                 }
             }
         }
+        return fragmentRequirements;
     }
 
-    public Integer getFragmentImportObjectsWeight() {
+    public Integer getFragmentImportObjectsWeight(HashSet<Integer> currentFragment,
+                                                  ArrayList<Integer> numberPrevObjectUsage) {
         HashSet<Integer> fragmentObjects = new HashSet<Integer>();
         for (Integer vertexId : currentFragment) {
             for (Integer objectId : graph.getVertices().get(vertexId).getObjectsToRead()) {
@@ -301,7 +296,8 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         return total;
     }
 
-    public Integer getFragmentExportObjectsWeight() {
+    public Integer getFragmentExportObjectsWeight(HashSet<Integer> currentFragment,
+                                                  ArrayList<HashSet<Integer>> objectsUsedInDescendants) {
         HashSet<Integer> fragmentObjects = new HashSet<Integer>();
         for (Integer vertexId : currentFragment) {
             for (Integer objectId : graph.getVertices().get(vertexId).getObjectsToWrite()) {
@@ -317,7 +313,8 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         return totalWeight;
     }
 
-    public Double getFragmentTotalExecutionTime(Color color) {
+    public Double getFragmentTotalExecutionTime(Color color,
+                                                HashSet<Integer> currentFragment) {
         Double total = 0.0;
         for (Integer vertexId : currentFragment) {
             total += graph.getVertices().get(vertexId).getExecutionTime().get(color);
@@ -325,19 +322,30 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         return total;
     }
 
-    public Double getFragmentProfit(Boolean isLoopPart) {
-        Integer transportingWeight = (getFragmentImportObjectsWeight() + getFragmentExportObjectsWeight());
+    public Double getFragmentProfit(Boolean isLoopPart,
+                                    HashSet<Integer> currentFragment,
+                                    ArrayList<Integer> numberPrevObjectUsage,
+                                    ArrayList<HashSet<Integer>> objectsUsedInDescendants) {
+        Integer transportingWeight = (getFragmentImportObjectsWeight(currentFragment,
+                numberPrevObjectUsage) + getFragmentExportObjectsWeight(currentFragment,
+                objectsUsedInDescendants));
         if (isLoopPart) {
-            return getFragmentTotalExecutionTime(Color.EO) -
-                    getFragmentTotalExecutionTime(Color.RUST) -
+            return getFragmentTotalExecutionTime(Color.EO, currentFragment) -
+                    getFragmentTotalExecutionTime(Color.RUST, currentFragment) -
                     gamma_coeff * (alpha_coeff + beta_coeff * transportingWeight);
         }
-        return getFragmentTotalExecutionTime(Color.EO) -
-                getFragmentTotalExecutionTime(Color.RUST) -
+        return getFragmentTotalExecutionTime(Color.EO, currentFragment) -
+                getFragmentTotalExecutionTime(Color.RUST, currentFragment) -
                 (alpha_coeff + beta_coeff * transportingWeight);
     }
 
-    public void findSubFragments(Integer vertexId) {
+    public void findSubFragments(Integer vertexId,
+                                 ArrayList<Boolean> used,
+                                 HashSet<SubFragment> subFragments,
+                                 ArrayList<Integer> numberPrevObjectUsage,
+                                 ArrayList<HashSet<Integer>> objectsUsedInDescendants,
+                                 ArrayList<HashSet<Integer>> fragmentRequirements,
+                                 HashSet<Integer> verticesInLoops) {
         used.set(vertexId, true);
         for (Integer objectId : graph.getVertices().get(vertexId).getObjectsToRead()) {
             numberPrevObjectUsage.set(objectId, numberPrevObjectUsage.get(objectId) + 1);
@@ -347,12 +355,24 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         }
 
         for (Integer descendantId : getVertexDescendants(vertexId)) {
-            checkSubFragment(vertexId, descendantId);
+            checkSubFragment(vertexId,
+                    descendantId,
+                    subFragments,
+                    numberPrevObjectUsage,
+                    objectsUsedInDescendants,
+                    fragmentRequirements,
+                    verticesInLoops);
         }
 
         for (Integer childId : graph.getVertices().get(vertexId).getChildIds()) {
             if (!used.get(childId)) {
-                findSubFragments(childId);
+                findSubFragments(childId,
+                        used,
+                        subFragments,
+                        numberPrevObjectUsage,
+                        objectsUsedInDescendants,
+                        fragmentRequirements,
+                        verticesInLoops);
             }
         }
 
@@ -364,9 +384,9 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
         }
     }
 
-    public void buildCliqueGraph(ArrayList<SubFragment> fragments) {
-        cliqueGraph = new ArrayList<HashSet<Integer>>();
-        for (int i = 0; i < subFragments.size(); ++i) {
+    public ArrayList<HashSet<Integer>> buildCliqueGraph(ArrayList<SubFragment> fragments) {
+        ArrayList<HashSet<Integer>> cliqueGraph = new ArrayList<HashSet<Integer>>();
+        for (int i = 0; i < fragments.size(); ++i) {
             cliqueGraph.add(new HashSet<Integer>());
         }
         for (int i = 0; i < fragments.size(); ++i) {
@@ -384,9 +404,11 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
                 }
             }
         }
+        return cliqueGraph;
     }
 
-    public ArrayList<Fragment> convertToFragments(ArrayList<Integer> cliqueVertices, ArrayList<SubFragment> subFragments) {
+    public ArrayList<Fragment> convertToFragments(ArrayList<Integer> cliqueVertices,
+                                                  ArrayList<SubFragment> subFragments) {
         ArrayList<Fragment> fragments = new ArrayList<>();
         for (Integer cliqueVertex : cliqueVertices) {
             fragments.add(new Fragment(new ArrayList<Integer>()));
@@ -398,35 +420,49 @@ public class AlphaAlgorithm implements AlgorithmizationAlgorithm {
     }
 
     @Override
-    public ArrayList<Fragment> algorithmize(Graph graph, Double alpha_coeff, Double beta_coeff, Double gamma_coeff, CliqueTaskSolver solver) {
+    public ArrayList<Fragment> algorithmize(Graph graph,
+                                            Double alpha_coeff,
+                                            Double beta_coeff,
+                                            Double gamma_coeff,
+                                            CliqueTaskSolver solver) {
         this.graph = graph;
         this.graphReversed = buildReversedGraph(graph);
         this.alpha_coeff = alpha_coeff;
         this.beta_coeff = beta_coeff;
         this.gamma_coeff = gamma_coeff;
-        subFragments = new HashSet<SubFragment>();
-        used = new ArrayList<Boolean>();
-        for (int i = 0; i < graph.getVertices().size(); ++i) {
-            used.add(false);
-        }
-        numberPrevObjectUsage = new ArrayList<Integer>();
+
+        ArrayList <Integer> numberPrevObjectUsage = new ArrayList<Integer>();
         for (int i = 0; i < graph.getObjectWeight().size(); ++i) {
             numberPrevObjectUsage.add(0);
         }
-        objectsUsedInDescendants = new ArrayList<HashSet<Integer>>();
+        ArrayList<HashSet<Integer>> objectsUsedInDescendants = new ArrayList<HashSet<Integer>>();
         for (Integer i = 0; i < graph.getVertices().size(); ++i) {
             objectsUsedInDescendants.add(new HashSet<Integer>());
-            used2 = new ArrayList<Boolean>();
+            ArrayList<Boolean> used2 = new ArrayList<Boolean>();
             for (int j = 0; j < graph.getVertices().size(); ++j) {
                 used2.add(false);
             }
-            setObjectsUsedInDescendants(i, i);
+            setObjectsUsedInDescendants(i, i, used2, objectsUsedInDescendants);
         }
-        setFragmentRequirements();
-        setVerticesInLoops();
-        findSubFragments(0);
+        ArrayList<HashSet<Integer>> fragmentRequirements = setFragmentRequirements();
+        HashSet<Integer> verticesInLoops = setVerticesInLoops();
+
+        ArrayList<Boolean> used = new ArrayList<Boolean>();
+        for (int i = 0; i < graph.getVertices().size(); ++i) {
+            used.add(false);
+        }
+
+        HashSet<SubFragment> subFragments = new HashSet<SubFragment>();
+        findSubFragments(0,
+                used,
+                subFragments,
+                numberPrevObjectUsage,
+                objectsUsedInDescendants,
+                fragmentRequirements,
+                verticesInLoops);
+
         ArrayList<SubFragment> fragments = new ArrayList<SubFragment>(subFragments);
-        buildCliqueGraph(fragments);
+        ArrayList<HashSet<Integer>> cliqueGraph = buildCliqueGraph(fragments);
         ArrayList<Double> cliqueWeights = new ArrayList<Double>();
         for (SubFragment fragment : fragments) {
             cliqueWeights.add(fragment.profit);

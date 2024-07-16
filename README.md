@@ -104,7 +104,7 @@ mvn package
 Then, you run our tool:
 
 ```bash
-mvn exec:java -Dexec.mainClass="alpha_algorithm.Main" -Dexec.args="--input input.xml --output result.json --alpha 1 --beta 1 --gamma 0.8"
+mvn exec:java -Dexec.mainClass="alpha_algorithm.Main" -Dexec.args="--input input.xml --output result.json --alpha 1 --beta 1 --gamma 0.8 --clique-solver-strategy auto"
 ```
 
 You will get a new `result.json` file, like this:
